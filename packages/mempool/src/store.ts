@@ -4,6 +4,7 @@ import {
     UserOperationInfo
 } from "@alto/types"
 import { Logger, Metrics } from "@alto/utils"
+import { publish } from "./publish"
 
 export class MemoryStore {
     // private monitoredTransactions: Map<HexData32, TransactionInfo> = new Map() // tx hash to info
@@ -27,6 +28,7 @@ export class MemoryStore {
             { userOpHash: op.userOperationHash, store: "outstanding" },
             "added user op to mempool"
         )
+        publish({ data: op, type: "outstanding" });
         this.metrics.userOperationsInMempool
             .labels({
                 status: "outstanding"
@@ -42,6 +44,7 @@ export class MemoryStore {
             { userOpHash: op.userOperationHash, store: "processing" },
             "added user op to mempool"
         )
+        publish({ data: op, type: "processing" });
         this.metrics.userOperationsInMempool
             .labels({
                 status: "processing"
@@ -60,6 +63,7 @@ export class MemoryStore {
             },
             "added user op to submitted mempool"
         )
+        publish({ data: op, type: "submitted" });
         this.metrics.userOperationsInMempool
             .labels({
                 status: "submitted"
@@ -104,6 +108,8 @@ export class MemoryStore {
         }
 
         this.processingUserOperations.splice(index, 1)
+        publish({ data: userOpHash, type: "removeProcessing" });
+
         this.logger.debug(
             { userOpHash, store: "processing" },
             "removed user op from mempool"
@@ -128,6 +134,7 @@ export class MemoryStore {
         }
 
         this.submittedUserOperations.splice(index, 1)
+        publish({ data: userOpHash, type: "removeSubmitted" });
         this.logger.debug(
             { userOpHash, store: "submitted" },
             "removed user op from mempool"
